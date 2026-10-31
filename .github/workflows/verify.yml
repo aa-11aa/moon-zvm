@@ -1,0 +1,43 @@
+name: Verify interpreter
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [js, wasm-gc, wasm, native]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Check compiler version
+        run: |
+          moon version --all
+          python3 - <<'PY'
+          import re, subprocess
+          version = subprocess.check_output(['moonc', '-v'], text=True)
+          match = re.search(r'(\d+)\.(\d+)\.(\d+)', version)
+          assert match and tuple(map(int, match.groups())) >= (0,10,16), version
+          PY
+      - run: moon check --target ${{ matrix.target }} --deny-warn
+      - run: moon test --target ${{ matrix.target }}
+      - run: moon build --target ${{ matrix.target }}
+      - name: Independent story and browser tests
+        if: matrix.target == 'js'
+        run: |
+          python3 tools/conformance.py --praxix
+          node tools/build-web.mjs
+          node tools/verify-wasm.mjs
+      - uses: actions/upload-artifact@v4
+        if: always() && matrix.target == 'js'
+        with:
+          name: story-transcripts
+          path: test-results/*.txt

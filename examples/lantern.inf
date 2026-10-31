@@ -1,0 +1,85 @@
+! Original, library-free demonstration story. Apache-2.0.
+Constant Story "The Last Lantern";
+Serial "261031";
+Release 1;
+Array input -> 100;
+Array parse -> 66;
+Global room = 0;
+Global lantern = 0;
+Global turns = 0;
+Object Hall "Quiet Hall";
+Object Tower "Watchtower";
+Object Cellar "Old Cellar";
+
+[ Describe;
+    if (room == 0) print "A quiet hall. Stairs lead north to a watchtower. A cellar lies south.^";
+    if (room == 1) print "The watchtower overlooks the sea. A brass lantern rests here. Stairs lead south.^";
+    if (room == 2) {
+        if (lantern) print "Your lantern reveals a silver key in the cellar. You have found the lost keeper's key!^";
+        else print "The cellar is too dark. You need a light. Stairs lead north.^";
+    }
+];
+
+[ SaveGame result;
+    #IfV3;
+    @save ?saved;
+    print "Save cancelled.^"; return;
+    .saved;
+    print "Game saved or restored.^";
+    #Ifnot;
+    @save -> result;
+    if (result == 1) print "Game saved.^";
+    if (result == 2) print "Game restored.^";
+    if (result == 0) print "Save cancelled.^";
+    #Endif;
+];
+
+[ RestoreGame result;
+    #IfV3;
+    @restore ?restored;
+    .restored;
+    print "Restore cancelled.^";
+    #Ifnot;
+    @restore -> result;
+    if (result == 0) print "Restore cancelled.^";
+    #Endif;
+];
+
+[ Main word;
+    print "The Last Lantern^A tiny original adventure for moon-zvm.^";
+    print "Commands: look, north, south, take, inventory, save, restore, quit.^";
+    Describe();
+    while (true) {
+        print "^>";
+        input->0 = 98;
+        parse->0 = 16;
+        read input parse;
+        if (parse->1 == 0) continue;
+        word = parse-->1;
+        if (word == 'quit' or 'q//') { print "Goodbye.^"; @quit; }
+        if (word == 'look' or 'l//') { Describe(); continue; }
+        if (word == 'inventory' or 'i//') {
+            if (lantern) print "You carry a brass lantern.^";
+            else print "Your hands are empty.^";
+            continue;
+        }
+        if (word == 'take') {
+            if (room == 1 && lantern == 0) { lantern = 1; print "You take the lantern.^"; }
+            else print "There is nothing to take.^";
+            continue;
+        }
+        if (word == 'save') { SaveGame(); continue; }
+        if (word == 'restore') { RestoreGame(); continue; }
+        if (word == 'north' or 'n//') {
+            if (room == 0) room = 1;
+            else if (room == 2) room = 0;
+            else { print "You cannot go that way.^"; continue; }
+        } else if (word == 'south' or 's//') {
+            if (room == 0) room = 2;
+            else if (room == 1) room = 0;
+            else { print "You cannot go that way.^"; continue; }
+        } else { print "Try a command from the list.^"; continue; }
+        turns++;
+        Describe();
+    }
+];

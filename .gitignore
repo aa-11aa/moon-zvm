@@ -1,0 +1,11 @@
+.DS_Store
+_build/
+target/
+target
+.mooncakes/
+.moonagent/
+dist/
+*.sav
+test-results/
+AGENTS.md
+.githooks/

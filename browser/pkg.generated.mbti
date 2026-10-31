@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "aa-11aa/moon-zvm/browser"
+
+// Values
+pub fn cancel_restore() -> Bool
+
+pub fn command(String) -> Bool
+
+pub fn error() -> String
+
+pub fn key(Int32) -> Bool
+
+pub fn load_byte(Int32, Int32) -> Bool
+
+pub fn load_size(Int32) -> Bool
+
+pub fn output() -> String
+
+pub fn restore() -> Bool
+
+pub fn save_byte(Int32) -> Int32
+
+pub fn save_size() -> Int32
+
+pub fn saved(Bool) -> Bool
+
+pub fn start() -> Bool
+
+pub fn step() -> String
+
+pub fn upper() -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

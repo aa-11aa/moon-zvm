@@ -1,0 +1,29 @@
+import {
+  "aa-11aa/moon-zvm" @zvm,
+}
+
+supported_targets = "wasm-gc"
+
+options(
+  link: {
+    "wasm-gc": {
+      "exports": [
+        "load_size",
+        "load_byte",
+        "start",
+        "step",
+        "output",
+        "upper",
+        "command",
+        "key",
+        "error",
+        "save_size",
+        "save_byte",
+        "saved",
+        "restore",
+        "cancel_restore",
+      ],
+      "use-js-builtin-string": true,
+    },
+  },
+)

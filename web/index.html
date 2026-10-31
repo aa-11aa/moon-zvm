@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>moon-zvm · The Last Lantern</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#101a24;color:#dce5e9}*{box-sizing:border-box}body{max-width:900px;margin:0 auto;padding:40px 24px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}h1{font-size:25px;letter-spacing:-.5px;margin:0}header p{color:#93a9b6;font-size:14px}.badge{border:1px solid #375064;border-radius:40px;padding:8px 12px;font-size:12px;color:#b2c5d1}.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:25px 0 18px}button,.file{font:inherit;font-size:14px;border:1px solid #405564;border-radius:7px;background:#1d2d3b;color:#edf4f7;padding:10px 14px;cursor:pointer}button:hover,.file:hover{background:#2b4253}button:disabled{opacity:.5;cursor:default}input[type=file]{max-width:100%;font-size:12px}.screen{background:#0b131b;border:1px solid #2b3e4c;border-radius:10px;overflow:hidden}#upper{background:#253847;color:#f0e8c5;margin:0;padding:8px 18px;font:13px/1.4 ui-monospace,Consolas,monospace;overflow:auto}#upper:empty{display:none}#transcript{font:15px/1.8 ui-monospace,Consolas,monospace;padding:25px;min-height:330px;max-height:58vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}form{display:flex;padding:15px;border-top:1px solid #253847;gap:12px}form span{color:#deb97c;padding:10px 0}#command{min-width:0;flex:1;border:0;background:transparent;color:#fff;font:16px ui-monospace,Consolas,monospace;outline:none}button:focus-visible,input:focus-visible,.file:focus-within{outline:2px solid #deb97c;outline-offset:3px}#status{font-size:13px;color:#b6c9d3;min-height:24px;margin:15px 0}footer{color:#8da4b2;font-size:12px;line-height:1.8}a{color:#deb97c}#restore{display:none}summary{cursor:pointer}details{margin-top:20px;color:#9cb3c0;font-size:13px}
+</style>
+<header><div><h1>moon-zvm</h1><p>A small machine. A story waiting.</p></div><span class="badge">MoonBit · Wasm GC</span></header>
+<div class="toolbar"><button id="demo" disabled>Play The Last Lantern</button><label class="file">Open .z3 / .z5 <input id="story" type="file" accept=".z3,.z5" aria-label="Choose a story file"></label><button id="stop" disabled>Stop</button></div>
+<div class="screen"><pre id="upper" aria-label="Upper window"></pre><pre id="transcript" aria-live="polite">Load the included adventure or open a story file you own.</pre><form id="form"><span aria-hidden="true">›</span><input id="command" aria-label="Your command" autocomplete="off" placeholder="Type a command…" disabled><button id="send" disabled>Enter</button></form></div>
+<p id="status" role="status">Loading the interpreter…</p>
+<div id="restore"><label class="file">Choose Quetzal save <input id="savefile" type="file" accept=".sav,.qzl,.ifzs" aria-label="Choose a save file"></label> <button id="cancel">Cancel restore</button></div>
+<footer>Stories run on your device. Files are never uploaded. The included adventure is original and licensed under Apache-2.0.</footer>
+<details><summary>About this interpreter</summary><p>Raw Z-machine v3/v5 stories, ASCII commands, plain text and an 80×25 split screen. Timed input, sound, pictures, font 3, transcripts and auxiliary files are unavailable. This preview does not claim full Standard 1.1 conformance. Modern browser with Wasm GC and JS string builtins required.</p></details>
+<script type="module">
+const $ = id => document.getElementById(id);
+let vm, mode = '', ticket = 0;
+const say = text => { $('transcript').textContent += text; $('transcript').scrollTop = $('transcript').scrollHeight; };
+const status = text => { $('status').textContent = text; };
+function upload(bytes) { if (!vm.load_size(bytes.length)) throw Error(vm.error()); for(let i=0;i<bytes.length;i++) if(!vm.load_byte(i,bytes[i])) throw Error(vm.error()); }
+function halt(message) { ticket++; mode=''; $('command').disabled = $('send').disabled = true; $('stop').disabled=true; status(message); }
+function pump(id) {
+  if(id !== ticket) return;
+  mode=vm.step(); say(vm.output()); $('upper').textContent=vm.upper();
+  $('command').disabled=$('send').disabled=!['line','char'].includes(mode);
+  if(mode==='budget') { status('Running…'); setTimeout(()=>pump(id),0); }
+  else if(mode==='line'||mode==='char') {status(mode==='line'?'Your turn.':'Waiting for a character.'); $('command').focus();}
+  else if(mode==='halted') halt('Story finished. Load a story to start again.');
+  else if(mode==='error') halt('Interpreter error: '+vm.error());
+  else if(mode==='save') {
+    const size=vm.save_size(); if(size<0){vm.saved(false);halt(vm.error());return;}
+    const bytes=Uint8Array.from({length:size},(_,i)=>vm.save_byte(i));
+    const url=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));
+    const a=document.createElement('a');a.href=url;a.download='moon-zvm.sav';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
+    vm.saved(true); status('Save downloaded.'); setTimeout(()=>pump(id),0);
+  } else if(mode==='restore') {$('restore').style.display='block';status('Choose a Quetzal save, or cancel.');}
+}
+async function load(bytes) {ticket++;upload(bytes);if(!vm.start())throw Error(vm.error());$('transcript').textContent='';$('upper').textContent='';$('restore').style.display='none';$('stop').disabled=false;pump(ticket);}
+try {
+  const response=await fetch('./browser.wasm'); if(!response.ok)throw Error('Cannot load browser.wasm');
+  const {instance}=await WebAssembly.instantiate(await response.arrayBuffer(),{}, {builtins:['js-string'],importedStringConstants:'_'});
+  vm=instance.exports; $('demo').disabled=false;status('Ready. Choose an adventure.');
+} catch(e){status('Could not start: '+e.message);}
+$('demo').onclick=async()=>{try{const r=await fetch('./lantern.z5');if(!r.ok)throw Error('Demo unavailable');await load(new Uint8Array(await r.arrayBuffer()));}catch(e){halt(e.message);}};
+$('story').onchange=async e=>{if(!e.target.files[0])return;try{await load(new Uint8Array(await e.target.files[0].arrayBuffer()));}catch(e){halt(e.message);}};
+$('form').onsubmit=e=>{e.preventDefault();const text=$('command').value;$('command').value='';if(!['line','char'].includes(mode))return;say('> '+text+'\n');const ok=mode==='line'?vm.command(text):vm.key(text.length?text.charCodeAt(0):13);if(!ok){status(vm.error());return;}pump(ticket);};
+$('stop').onclick=()=>halt('Stopped. Reload a story to restart.');
+$('cancel').onclick=()=>{vm.cancel_restore();$('restore').style.display='none';pump(ticket);};
+$('savefile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{upload(new Uint8Array(await f.arrayBuffer()));if(!vm.restore())throw Error(vm.error());$('restore').style.display='none';e.target.value='';pump(ticket);}catch(err){status('Restore rejected: '+err.message);}};
+</script>
+</html>

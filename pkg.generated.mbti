@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "aa-11aa/moon-zvm"
+
+// Values
+
+// Errors
+pub(all) suberror Fault {
+  Invalid(String)
+}
+
+// Types and methods
+type Machine
+pub fn Machine::cancel_restore(Self) -> Unit raise Fault
+pub fn Machine::finish_save(Self, Bool) -> Unit raise Fault
+pub fn Machine::is_halted(Self) -> Bool
+pub fn Machine::new(Bytes) -> Self raise Fault
+pub fn Machine::position(Self) -> Int32
+pub fn Machine::restore_data(Self, Bytes) -> Unit raise Fault
+pub fn Machine::run(Self, budget? : Int32) -> String raise Fault
+pub fn Machine::save_data(Self) -> Bytes raise Fault
+pub fn Machine::send_char(Self, Int32) -> Unit raise Fault
+pub fn Machine::send_line(Self, String) -> Unit raise Fault
+pub fn Machine::take_output(Self) -> String
+pub fn Machine::upper_window(Self) -> String
+
+// Type aliases
+
+// Traits

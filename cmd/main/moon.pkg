@@ -1,0 +1,8 @@
+import {
+  "aa-11aa/moon-zvm" @zvm,
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")
+
+supported_targets = "js"

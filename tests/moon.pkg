@@ -1,0 +1,3 @@
+import {
+  "aa-11aa/moon-zvm" @zvm,
+} for "test"
