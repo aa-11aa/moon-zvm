@@ -1,7 +1,10 @@
 """Run independent story tests. No interpreter logic lives in this script."""
 from pathlib import Path
 import argparse
+import base64
 import hashlib
+import io
+import json
 import re
 import shutil
 import subprocess
@@ -10,6 +13,56 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 RESULTS = ROOT / "test-results"
+
+
+def load_praxix():
+    """Fetch exactly the tested story, without relying on one archive host."""
+    story = RESULTS / "praxix.z5"
+    story_hash = "bef3bdc2543cc7161833062855aa9bb1682db9eca69d9d36e9101347c21b48ac"
+    archive_hash = "c654d656fb426ae1b386e5ab9c44cc5062eade4a8c3bce69c9e61191221501ad"
+    archive = RESULTS / "praxix.zip"
+    if story.exists():
+        assert hashlib.sha256(story.read_bytes()).hexdigest() == story_hash, "Cached Praxix story hash mismatch"
+        return story
+
+    def from_archive(data):
+        assert hashlib.sha256(data).hexdigest() == archive_hash, "Praxix archive hash mismatch"
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            name = next(name for name in z.namelist() if name.endswith("praxix.z5"))
+            return z.read(name)
+
+    if archive.exists():
+        payload = from_archive(archive.read_bytes())
+    else:
+        sources = [
+            ("blob", "https://api.github.com/repos/curiousdannii/if/git/blobs/87f83a7ab4e33422807d0eff15d7b80c8e06771d"),
+            ("zip", "https://ifarchive.org/if-archive/infocom/interpreters/tools/praxix.zip"),
+            ("zip", "https://mirror.ifarchive.org/if-archive/infocom/interpreters/tools/praxix.zip"),
+        ]
+        failures = []
+        payload = None
+        for kind, url in sources:
+            try:
+                request = urllib.request.Request(url, headers={"User-Agent": "moon-zvm-conformance/0.1"})
+                with urllib.request.urlopen(request, timeout=20) as response:
+                    data = response.read(131073)
+                assert len(data) <= 131072, "Praxix response exceeds expected size"
+                if kind == "blob":
+                    obj = json.loads(data)
+                    assert obj["encoding"] == "base64", "Unexpected blob encoding"
+                    payload = base64.b64decode(obj["content"])
+                else:
+                    payload = from_archive(data)
+                assert hashlib.sha256(payload).hexdigest() == story_hash, "Praxix story hash mismatch"
+                break
+            except (OSError, ValueError, KeyError, AssertionError, zipfile.BadZipFile) as error:
+                failures.append(f"{url}: {type(error).__name__}: {error}")
+                payload = None
+        if payload is None:
+            raise AssertionError("Praxix download failed:\n" + "\n".join(failures))
+    assert hashlib.sha256(payload).hexdigest() == story_hash, "Praxix story hash mismatch"
+    story.write_bytes(payload)
+    return story
 
 
 def run_story(path, commands="", timeout=30):
@@ -23,7 +76,7 @@ def run_story(path, commands="", timeout=30):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--praxix", action="store_true", help="Download pinned Praxix archive and run its interactive 'all' command")
+    parser.add_argument("--praxix", action="store_true", help="Download pinned Praxix story and run its interactive 'all' command")
     args = parser.parse_args()
     subprocess.run([shutil.which("moon"), "build", "cmd/main", "--target", "js"], cwd=ROOT, check=True)
     RESULTS.mkdir(exist_ok=True)
@@ -44,25 +97,7 @@ def main():
         assert data[:4] == b"FORM" and data[8:12] == b"IFZS"
         print(f"Original adventure v{version}: commands and Quetzal save/restore passed")
     if args.praxix:
-        archive = RESULTS / "praxix.zip"
-        expected = "c654d656fb426ae1b386e5ab9c44cc5062eade4a8c3bce69c9e61191221501ad"
-        if not archive.exists():
-            urls = [f"https://{host}/if-archive/infocom/interpreters/tools/praxix.zip"
-                    for host in ["ifarchive.org", "mirror.ifarchive.org"]]
-            for url in urls:
-                try:
-                    with urllib.request.urlopen(url, timeout=30) as response:
-                        archive.write_bytes(response.read())
-                    break
-                except OSError:
-                    continue
-        assert archive.exists(), "Praxix download failed"
-        assert hashlib.sha256(archive.read_bytes()).hexdigest() == expected, "Praxix archive hash mismatch"
-        with zipfile.ZipFile(archive) as z:
-            # Do not extract arbitrary paths from a remote archive.
-            story = next(name for name in z.namelist() if name.endswith("praxix.z5"))
-            (RESULTS / "praxix.z5").write_bytes(z.read(story))
-        transcript = run_story(RESULTS / "praxix.z5", "all\nquit\n")
+        transcript = run_story(load_praxix(), "all\nquit\n")
         (RESULTS / "praxix.txt").write_text(transcript, encoding="utf8")
         assert "All tests passed." in transcript and "FAIL" not in transcript, transcript
         assert "Stopping, interpreter is only version 0.0." in transcript

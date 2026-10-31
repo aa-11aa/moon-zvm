@@ -16,6 +16,8 @@ inform6 -v3 czech.inf czech.z3
 Czech permits use, modification and redistribution for any purpose with its notice preserved.
 It is test data; no interpreter implementation was copied from Czech, Inform or another VM.
 
-Praxix is downloaded only when `tools/conformance.py --praxix` is requested. The script verifies its archive hash. Praxix is interactive; the runner feeds `all` and `quit` and checks its own assertion summary. Its Standard 1.1 visual colour test and Standard 1.2 capability test are skipped because this interpreter intentionally advertises revision 0.0. This is not a claim of complete Z-machine conformance.
+Praxix is downloaded only when `tools/conformance.py --praxix` is requested. The primary source is its co-author's repository, https://github.com/curiousdannii/if, pinned to Git blob `87f83a7ab4e33422807d0eff15d7b80c8e06771d`. IF Archive and its mirror are fallback sources. The story's SHA-256 is `bef3bdc2543cc7161833062855aa9bb1682db9eca69d9d36e9101347c21b48ac`, identical to `praxix.z5` inside the hash-pinned IF Archive distribution. Both cached and freshly downloaded content are verified before running.
+
+Praxix is interactive; the runner feeds `all` and `quit` and checks its own assertion summary. Its Standard 1.1 visual colour test and Standard 1.2 capability test are skipped because this interpreter intentionally advertises revision 0.0. This is not a claim of complete Z-machine conformance.
 
 The included `examples/lantern.inf` and `.z3` / `.z5` builds are original Apache-2.0 material. They use no Inform library. Zork and other proprietary games are not included.

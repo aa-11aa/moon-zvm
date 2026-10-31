@@ -95,7 +95,7 @@ node tools/build-web.mjs
 node tools/verify-wasm.mjs
 ```
 
-The story runner checks Czech **v3: 349 passed / 0 failed** and **v5: 406 passed / 0 failed**. Each additionally prints 19 visual checks, which are **not** counted as automated passes. The optional Praxix runner downloads a hash-pinned archive, feeds `all` / `quit`, and checks its automatic summary; Standard 1.1 colour and Standard 1.2 capability groups are skipped. Transcripts are saved under ignored `test-results/`.
+The story runner checks Czech **v3: 349 passed / 0 failed** and **v5: 406 passed / 0 failed**. Each additionally prints 19 visual checks, which are **not** counted as automated passes. The optional Praxix runner downloads a hash-pinned story from its author's repository (with archive mirrors as fallbacks), feeds `all` / `quit`, and checks its automatic summary; Standard 1.1 colour and Standard 1.2 capability groups are skipped. Transcripts are saved under ignored `test-results/`.
 
 The original adventure is tested in both v3 and v5 with navigation, inventory and a save/restore round trip. `verify-wasm.mjs` repeats an adventure through the actual browser Wasm exports. MoonBit tests additionally exercise malformed headers, every first-byte opcode, truncated saves, arithmetic, stack semantics and input suspension.
 
