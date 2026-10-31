@@ -112,6 +112,8 @@ The story runner checks Czech **v3: 349 passed / 0 failed** and **v5: 406 passed
 
 The original adventure is tested in both v3 and v5 with navigation, inventory and a save/restore round trip. `verify-wasm.mjs` repeats an adventure through the actual browser Wasm exports. MoonBit tests additionally exercise malformed headers, every first-byte opcode, truncated saves, arithmetic, stack semantics and input suspension.
 
+Inspection safety tests cover all 256 initial opcode bytes in both versions, truncated operand/branch/text encodings, every truncated prefix of a Blorb fixture, 1,024 reproducible container mutations and 1,024 instruction tails. These run on the same four CI backends and require either bounded valid results or a format fault; they are regression coverage, not a proof that arbitrary hostile files are safe.
+
 `verify-player.mjs` tests the browser host's asynchronous request ordering with mocks: stopped restores cannot restart a game, older downloads cannot replace a newer story, oversized files are rejected before reading, and rejected commands remain available for correction. These controller checks supplement the interpreter tests; they are not a substitute for browser UI testing.
 
 ## References and licensing
