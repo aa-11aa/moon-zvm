@@ -2,6 +2,8 @@
 
 A Z-machine v3/v5 interpreter written in MoonBit. The interpreter core has no FFI or external package dependencies. Terminal file access is a small Node.js host; the browser host runs the same core as Wasm GC.
 
+![The Last Lantern running in a browser](https://raw.githubusercontent.com/aa-11aa/moon-zvm/main/.assets/demo.gif)
+
 ## Try an adventure
 
 Install MoonBit (moonc 0.10.16 or newer) and Node.js 22.3 or newer. From this directory:
@@ -93,11 +95,14 @@ python tools/conformance.py
 python tools/conformance.py --praxix
 node tools/build-web.mjs
 node tools/verify-wasm.mjs
+node tools/verify-player.mjs
 ```
 
 The story runner checks Czech **v3: 349 passed / 0 failed** and **v5: 406 passed / 0 failed**. Each additionally prints 19 visual checks, which are **not** counted as automated passes. The optional Praxix runner downloads a hash-pinned story from its author's repository (with archive mirrors as fallbacks), feeds `all` / `quit`, and checks its automatic summary; Standard 1.1 colour and Standard 1.2 capability groups are skipped. Transcripts are saved under ignored `test-results/`.
 
 The original adventure is tested in both v3 and v5 with navigation, inventory and a save/restore round trip. `verify-wasm.mjs` repeats an adventure through the actual browser Wasm exports. MoonBit tests additionally exercise malformed headers, every first-byte opcode, truncated saves, arithmetic, stack semantics and input suspension.
+
+`verify-player.mjs` tests the browser host's asynchronous request ordering with mocks: stopped restores cannot restart a game, older downloads cannot replace a newer story, oversized files are rejected before reading, and rejected commands remain available for correction. These controller checks supplement the interpreter tests; they are not a substitute for browser UI testing.
 
 ## References and licensing
 

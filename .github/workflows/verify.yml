@@ -24,6 +24,7 @@ jobs:
           python3 - <<'PY'
           import re, subprocess
           version = subprocess.check_output(['moonc', '-v'], text=True)
+          print(version.strip())
           match = re.search(r'(\d+)\.(\d+)\.(\d+)', version)
           assert match and tuple(map(int, match.groups())) >= (0,10,16), version
           PY
@@ -36,6 +37,7 @@ jobs:
           python3 tools/conformance.py --praxix
           node tools/build-web.mjs
           node tools/verify-wasm.mjs
+          node tools/verify-player.mjs
       - uses: actions/upload-artifact@v4
         if: always() && matrix.target == 'js'
         with:
