@@ -86,7 +86,8 @@ function load(bytes, id) {
 try {
   const response = await fetch('./browser.wasm');
   if (!response.ok) throw Error('Cannot load browser.wasm');
-  const { instance } = await WebAssembly.instantiate(await response.arrayBuffer(), {}, {
+  const imports = { host: { random_seed: () => crypto.getRandomValues(new Uint16Array(1))[0] } };
+  const { instance } = await WebAssembly.instantiate(await response.arrayBuffer(), imports, {
     builtins: ['js-string'], importedStringConstants: '_'
   });
   vm = instance.exports;

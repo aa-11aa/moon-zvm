@@ -23,6 +23,7 @@ struct Machine {
   mut parse_buffer : Int32
   mut input_store : Int32
   mut rng : Int32
+  seed_source : () -> Int32
   streams : Array[Int32]
   mut screen : Bool
   undo : Array[Saved]
@@ -53,7 +54,12 @@ priv struct Frame {
 
 ///|
 /// Load a raw v3 or v5 story. Blorb containers must be extracted by the host.
-pub fn Machine::new(story : Bytes) -> Machine raise Fault {
+/// Hosts can provide fresh seeds for normal play and @random 0. The default
+/// seed source is deterministic for reproducible embedding and tests.
+pub fn Machine::new(
+  story : Bytes,
+  seed_source~ : () -> Int32 = fn() { 1 },
+) -> Machine raise Fault {
   if story.length() < 64 {
     raise Invalid("truncated header")
   }
@@ -95,7 +101,8 @@ pub fn Machine::new(story : Bytes) -> Machine raise Fault {
     input_buffer: 0,
     parse_buffer: 0,
     input_store: -1,
-    rng: 1,
+    rng: seed_source() & 65535,
+    seed_source,
     streams: [],
     screen: true,
     undo: [],

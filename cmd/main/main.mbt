@@ -25,6 +25,10 @@ extern "js" fn read_line() -> String =
   #| }
 
 ///|
+extern "js" fn random_seed() -> Int32 =
+  #| () => process.getBuiltinModule('node:crypto').randomInt(0, 65536)
+
+///|
 fn main {
   let args = @env.args()
   if args.length() != 3 {
@@ -32,7 +36,10 @@ fn main {
     return
   }
   try {
-    let machine = @zvm.Machine::new(read_story(args[2]))
+    let machine = @zvm.Machine::new(
+      read_story(args[2]),
+      seed_source=random_seed,
+    )
     let mut slices = 0
     while !machine.is_halted() {
       let status = machine.run() catch {

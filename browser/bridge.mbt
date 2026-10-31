@@ -30,9 +30,15 @@ pub fn load_byte(index : Int32, value : Int32) -> Bool {
 }
 
 ///|
+extern "wasm" fn random_seed() -> Int32 = "host" "random_seed"
+
+///|
 pub fn start() -> Bool {
   try {
-    let machine = @zvm.Machine::new(Bytes::from_array(host.bytes))
+    let machine = @zvm.Machine::new(
+      Bytes::from_array(host.bytes),
+      seed_source=random_seed,
+    )
     host.machine = Some(machine)
     host.message = ""
     true

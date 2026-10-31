@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const { instance } = await WebAssembly.instantiate(
-  readFileSync('dist/browser.wasm'), {}, { builtins: ['js-string'], importedStringConstants: '_' }
+  readFileSync('dist/browser.wasm'), {host:{random_seed:()=>7}}, { builtins: ['js-string'], importedStringConstants: '_' }
 );
 const vm = instance.exports;
 function upload(bytes) {assert.equal(vm.load_size(bytes.length),1);bytes.forEach((b,i)=>assert.equal(vm.load_byte(i,b),1));}

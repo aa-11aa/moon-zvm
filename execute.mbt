@@ -276,11 +276,21 @@ fn Machine::execute(self : Machine, ins : Instruction) -> Unit raise Fault {
           self.require(a, 1)
           let range = signed(x)
           if range <= 0 {
-            self.rng = if range == 0 { 1 } else { -range }
+            self.rng = if range == 0 {
+              (self.seed_source)() & 65535
+            } else {
+              -range
+            }
             self.store(0)
           } else {
-            self.rng = (self.rng * 25173 + 13849) & 65535
-            self.store(self.rng % range + 1)
+            let limit = 65536 - 65536 % range
+            while true {
+              self.rng = (self.rng * 25173 + 13849) & 65535
+              if self.rng < limit {
+                self.store(self.rng % range + 1)
+                break
+              }
+            }
           }
         }
         8 => {
@@ -533,7 +543,7 @@ fn Machine::require(
 
 ///|
 fn Machine::restart(self : Machine) -> Unit raise Fault {
-  let fresh = Machine::new(self.original)
+  let fresh = Machine::new(self.original, seed_source=self.seed_source)
   self.apply_saved(fresh.capture())
   self.streams.clear()
   self.undo.clear()
@@ -544,4 +554,5 @@ fn Machine::restart(self : Machine) -> Unit raise Fault {
   self.window = 0
   self.split = 0
   self.font = fresh.font
+  self.rng = fresh.rng
 }

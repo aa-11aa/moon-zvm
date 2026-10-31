@@ -77,7 +77,7 @@ This project does **not** claim full Standard 1.1 conformance. The header delibe
 - Line input is printable ASCII. ZSCII output supports the standard accented-character table and v5 Unicode translation tables. Timed input is unavailable.
 - The hosts offer plain text. Colour, bold/italic styles, font 3, pictures, mouse, external transcripts, command recording and auxiliary files are not advertised. Font 1 and fixed font 4 are available; unsupported fonts return 0.
 - v3 reports that it cannot display the automatic status line. The upper-window API is for explicit split-window output.
-- Random numbers use a deterministic 16-bit PRNG. This is useful for reproducible execution and is not a source of entropy.
+- Random numbers use a 16-bit PRNG with rejection sampling for bounded ranges. The CLI/browser supply fresh host seeds on load, restart and `@random 0`; explicit negative seeds remain reproducible. Embedded callers can pass `seed_source` to `Machine::new`; omitting it gives deterministic seeds for tests. The PRNG is not cryptographic.
 - Quetzal exchange has been tested in both directions with Dumb Frotz 2.44 using the original v3/v5 adventure. This does not establish compatibility with every interpreter or every save file.
 - The core is intended for JS, Wasm GC, Wasm and native. The CLI is Node.js only. Native tests run in Linux CI; Windows needs MSVC Build Tools and the Windows SDK.
 
