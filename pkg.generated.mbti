@@ -2,6 +2,8 @@
 package "aa-11aa/moon-zvm"
 
 // Values
+pub fn extract_story(Bytes) -> Bytes raise Fault
+
 pub fn inspect_instruction(Bytes, Int32) -> InstructionInfo raise Fault
 
 pub fn inspect_story(Bytes) -> StoryInfo raise Fault

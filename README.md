@@ -67,6 +67,7 @@ Decode a bounded sequential listing with `moon run cmd/main --target js -- --dis
 `moon run cmd/main --target js -- --trace 20 examples/lantern.z5` logs the first 20 executed instructions to stderr, then continues normally. The cap is 10,000; story output stays on stdout. Trace follows actual calls and branches and resumes after host input; it never reads a stack operand for display.
 
 - Raw v3/v5 headers, big-endian dynamic/static memory, 16-bit arithmetic.
+- Blorb executable extraction through `extract_story(bytes)` and automatic CLI loading of `.zblorb` files. The resource index selects Exec 0, whose chunk must be ZCOD; unrelated resources are skipped with IFF padding checks.
 - Long, short, variable and extended instruction encodings; routine calls, arguments, locals, globals and evaluation stacks.
 - Comparisons, branches, signed arithmetic, indirect variables, object trees, attributes and variable-size properties.
 - Z-encoded strings, abbreviation tables, custom alphabets and ZSCII output.
@@ -79,7 +80,7 @@ Decode a bounded sequential listing with `moon run cmd/main --target js -- --dis
 
 This project does **not** claim full Standard 1.1 conformance. The header deliberately reports standard revision 0.0. Czech and Praxix check many execution details, but do not establish complete screen or game compatibility.
 
-- Supported story versions: **3 and 5 only**. No Blorb extraction, v6 graphics or sound.
+- Supported story versions: **3 and 5 only**. No v6 graphics or sound. Blorb extraction is limited to 16 MiB, requires one complete IFRS FORM with no trailing bytes, and does not render picture/sound resources. The browser still loads raw stories only; embedded callers pass `extract_story(bytes)` to `Machine::new`.
 - Line input is printable ASCII. ZSCII output supports the standard accented-character table and v5 Unicode translation tables. Timed input is unavailable.
 - The hosts offer plain text. Colour, bold/italic styles, font 3, pictures, mouse, external transcripts, command recording and auxiliary files are not advertised. Font 1 and fixed font 4 are available; unsupported fonts return 0.
 - v3 reports that it cannot display the automatic status line. The upper-window API is for explicit split-window output.
@@ -116,5 +117,7 @@ The original adventure is tested in both v3 and v5 with navigation, inventory an
 ## References and licensing
 
 The runtime was implemented from [The Z-Machine Standards Document 1.1](https://inform-fiction.org/zmachine/standards/current/index.html) and [Quetzal 1.4](https://ifarchive.org/if-archive/infocom/interpreters/specification/savefile_14.txt). No Frotz or other interpreter source was used or ported.
+
+Blorb executable loading follows the [Blorb resource format](https://eblong.com/zarf/blorb/blorb.html), including indexed chunk offsets and even-byte alignment.
 
 Runtime and original examples: **Apache-2.0** (see `LICENSE`). Third-party test stories retain their own license notices; see [`fixtures/SOURCES.md`](fixtures/SOURCES.md). Inform 6 compiles the original demonstration story and the v3 Czech test; Inform is not a runtime dependency. [Frotz](https://ifarchive.org/indexes/if-archive/infocom/interpreters/frotz/) (GPL-2.0) is used only as an optional external behavior/save-format reference; neither its executable nor its source is included in the module. Proprietary game files, including Zork, are not distributed here.

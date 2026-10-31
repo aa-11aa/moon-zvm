@@ -3,6 +3,8 @@ import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const cli = resolve(root, '_build/js/debug/build/cmd/main/main.js');
 function run(args, input = '') {
@@ -34,3 +36,24 @@ assert.equal(listing.status, 0, listing.stderr);
 assert.match(listing.stdout, /1621: call_vs/);
 assert.match(listing.stdout, /1626: quit/);
 console.log('CLI inspection and bounded trace: v3/v5 transcripts unchanged.');
+const scratch = mkdtempSync(resolve(tmpdir(), 'moon-zvm-blorb-'));
+try {
+  for (const version of [3, 5]) {
+    const path = `examples/lantern.z${version}`;
+    const story = readFileSync(resolve(root, path));
+    const data = Buffer.alloc(44 + story.length + (story.length & 1));
+    data.write('FORM', 0); data.writeUInt32BE(data.length - 8, 4);
+    data.write('IFRSRIdx', 8); data.writeUInt32BE(16, 16);
+    data.writeUInt32BE(1, 20); data.write('Exec', 24);
+    data.writeUInt32BE(36, 32); data.write('ZCOD', 36);
+    data.writeUInt32BE(story.length, 40); story.copy(data, 44);
+    const wrapped = resolve(scratch, `lantern-${version}.zblorb`);
+    writeFileSync(wrapped, data);
+    const actual = run([wrapped], 'look\nquit\n');
+    const expected = run([path], 'look\nquit\n');
+    assert.equal(actual.status, 0, actual.stderr);
+    assert.equal(actual.stdout, expected.stdout);
+    assert.equal(run(['--info', wrapped]).stdout, run(['--info', path]).stdout);
+  }
+} finally { rmSync(scratch, { recursive: true, force: true }); }
+console.log('CLI Blorb extraction: v3/v5 transcripts and metadata match raw stories.');

@@ -39,7 +39,7 @@ fn main {
   }
   if args.length() == 6 && args[2] == "--disassemble" {
     try {
-      let story = read_story(args[5])
+      let story = @zvm.extract_story(read_story(args[5]))
       let mut address = decimal_arg(args[3])
       let count = decimal_arg(args[4])
       if address < 64 || count < 1 || count > 10000 {
@@ -59,7 +59,7 @@ fn main {
   }
   if args.length() == 4 && args[2] == "--info" {
     try {
-      let info = @zvm.inspect_story(read_story(args[3]))
+      let info = @zvm.inspect_story(@zvm.extract_story(read_story(args[3])))
       println("Version: \{info.version}")
       println("Release: \{info.release}")
       println("Serial: \{info.serial}")
@@ -88,7 +88,7 @@ fn main {
   }
   try {
     let machine = @zvm.Machine::new(
-      read_story(args[if tracing { 4 } else { 2 }]),
+      @zvm.extract_story(read_story(args[if tracing { 4 } else { 2 }])),
       seed_source=random_seed,
     )
     let mut slices = 0
