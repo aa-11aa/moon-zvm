@@ -2,6 +2,7 @@
 package "aa-11aa/moon-zvm"
 
 // Values
+pub fn inspect_story(Bytes) -> StoryInfo raise Fault
 
 // Errors
 pub(all) suberror Fault {
@@ -22,6 +23,23 @@ pub fn Machine::send_char(Self, Int32) -> Unit raise Fault
 pub fn Machine::send_line(Self, String) -> Unit raise Fault
 pub fn Machine::take_output(Self) -> String
 pub fn Machine::upper_window(Self) -> String
+
+pub struct StoryInfo {
+  version : Int32
+  release : Int32
+  serial : String
+  initial_pc : Int32
+  high_memory : Int32
+  static_memory : Int32
+  dictionary : Int32
+  objects : Int32
+  globals : Int32
+  abbreviations : Int32
+  actual_length : Int32
+  declared_length : Int32
+  checksum : Int32
+  checksum_valid : Bool?
+}
 
 // Type aliases
 

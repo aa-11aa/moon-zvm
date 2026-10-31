@@ -60,31 +60,13 @@ pub fn Machine::new(
   story : Bytes,
   seed_source~ : () -> Int32 = fn() { 1 },
 ) -> Machine raise Fault {
-  if story.length() < 64 {
-    raise Invalid("truncated header")
-  }
+  let info = inspect_story(story)
   let mem = Array::makei(story.length(), i => story[i].to_int())
-  let version = mem[0]
-  if version != 3 && version != 5 {
-    raise Invalid("only story versions 3 and 5 are supported")
-  }
-  let word = fn(i) { mem[i] * 256 + mem[i + 1] }
-  let static_base = word(14)
-  let globals = word(12)
-  let objects = word(10)
-  let pc = word(6)
-  let max_size = if version == 3 { 131072 } else { 262144 }
-  if story.length() > max_size ||
-    static_base < 64 ||
-    static_base > story.length() ||
-    globals < 64 ||
-    globals > static_base - 480 ||
-    objects < 64 ||
-    objects >= static_base ||
-    pc < 64 ||
-    pc >= story.length() {
-    raise Invalid("invalid memory map")
-  }
+  let version = info.version
+  let static_base = info.static_memory
+  let globals = info.globals
+  let objects = info.objects
+  let pc = info.initial_pc
   let m = Machine::{
     mem,
     original: story,
@@ -92,7 +74,7 @@ pub fn Machine::new(
     static_base,
     globals,
     objects,
-    abbreviations: word(24),
+    abbreviations: info.abbreviations,
     pc,
     frames: [{ locals: [], stack: [], return_pc: 0, store: -1, argc: 0, }],
     output: StringBuilder(),

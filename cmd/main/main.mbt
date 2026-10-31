@@ -31,6 +31,29 @@ extern "js" fn random_seed() -> Int32 =
 ///|
 fn main {
   let args = @env.args()
+  if args.length() == 4 && args[2] == "--info" {
+    try {
+      let info = @zvm.inspect_story(read_story(args[3]))
+      println("Version: \{info.version}")
+      println("Release: \{info.release}")
+      println("Serial: \{info.serial}")
+      println("Initial PC: \{info.initial_pc}")
+      println("Dynamic memory: 0..\{info.static_memory}")
+      println("High memory: \{info.high_memory}")
+      println(
+        "File bytes: \{info.actual_length} (declared \{info.declared_length})",
+      )
+      let checksum = match info.checksum_valid {
+        Some(true) => "verified"
+        Some(false) => "mismatch"
+        None => "not provided"
+      }
+      println("Checksum: \{checksum}")
+    } catch {
+      @zvm.Invalid(message) => exit_error(message)
+    }
+    return
+  }
   if args.length() != 3 {
     exit_error("Usage: moon run cmd/main --target js -- story.z3|story.z5")
     return

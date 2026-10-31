@@ -37,7 +37,7 @@ Open http://localhost:8000 and choose **Play The Last Lantern**, or load your ow
 
 ## Embed the core
 
-Import the root package `aa-11aa/moon-zvm` with an alias such as `@zvm`. A registry release is not yet available; use this checkout to run the examples and tests.
+The published baseline is **0.1.0** (`v0.1.0`). Install it with `moon add aa-11aa/moon-zvm@0.1.0`. The `main` branch develops **0.2.0** and may contain APIs that are not yet in the registry; use this checkout for the tools below. Import the root package with an alias such as `@zvm`.
 
 ```moonbit
 let machine = @zvm.Machine::new(story_bytes)
@@ -59,6 +59,8 @@ let text = machine.take_output()
 Invalid stories, unsupported instructions and execution faults raise `Invalid(String)`. `position()` gives the current PC; runtime error messages include the instruction address. A rejected save leaves the pending restore intact so the host can retry or cancel. The interpreter enforces instruction, call-stack, evaluation-stack, abbreviation-depth and buffered-output limits.
 
 ## Implemented
+
+Inspect a story without executing it with `moon run cmd/main --target js -- --info examples/lantern.z5`. The `inspect_story(bytes)` API reports original header fields, printable serial metadata, memory boundaries and checksum status, and rejects truncated or invalid memory maps before allocating a machine.
 
 - Raw v3/v5 headers, big-endian dynamic/static memory, 16-bit arithmetic.
 - Long, short, variable and extended instruction encodings; routine calls, arguments, locals, globals and evaluation stacks.
