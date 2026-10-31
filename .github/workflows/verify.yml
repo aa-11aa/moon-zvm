@@ -35,6 +35,7 @@ jobs:
         if: matrix.target == 'js'
         run: |
           python3 tools/conformance.py --praxix
+          node tools/verify-debug.mjs
           node tools/build-web.mjs
           node tools/verify-wasm.mjs
           node tools/verify-player.mjs

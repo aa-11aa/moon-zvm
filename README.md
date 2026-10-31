@@ -64,6 +64,8 @@ Inspect a story without executing it with `moon run cmd/main --target js -- --in
 
 Decode a bounded sequential listing with `moon run cmd/main --target js -- --disassemble 1621 2 examples/lantern.z5` (decimal address and count). `inspect_instruction(bytes, address)` reports raw operands, store variables, branch destinations and inline text boundaries. `Machine::peek_instruction()` inspects the current live instruction without evaluating variables or changing stacks; it rejects halted or suspended machines. Listings do not follow calls or branches and do not decode text as instructions automatically.
 
+`moon run cmd/main --target js -- --trace 20 examples/lantern.z5` logs the first 20 executed instructions to stderr, then continues normally. The cap is 10,000; story output stays on stdout. Trace follows actual calls and branches and resumes after host input; it never reads a stack operand for display.
+
 - Raw v3/v5 headers, big-endian dynamic/static memory, 16-bit arithmetic.
 - Long, short, variable and extended instruction encodings; routine calls, arguments, locals, globals and evaluation stacks.
 - Comparisons, branches, signed arithmetic, indirect variables, object trees, attributes and variable-size properties.
@@ -97,6 +99,7 @@ moon info
 moon fmt --check
 python tools/conformance.py
 python tools/conformance.py --praxix
+node tools/verify-debug.mjs
 node tools/build-web.mjs
 node tools/verify-wasm.mjs
 node tools/verify-player.mjs

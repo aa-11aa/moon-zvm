@@ -31,6 +31,12 @@ extern "js" fn random_seed() -> Int32 =
 ///|
 fn main {
   let args = @env.args()
+  let tracing = args.length() == 5 && args[2] == "--trace"
+  let mut trace_left = if tracing { decimal_arg(args[3]) } else { 0 }
+  if tracing && (trace_left < 1 || trace_left > 10000) {
+    exit_error("Trace count must be a decimal integer in 1..10000")
+    return
+  }
   if args.length() == 6 && args[2] == "--disassemble" {
     try {
       let story = read_story(args[5])
@@ -74,18 +80,28 @@ fn main {
     }
     return
   }
-  if args.length() != 3 {
-    exit_error("Usage: moon run cmd/main --target js -- story.z3|story.z5")
+  if args.length() != 3 && !tracing {
+    exit_error(
+      "Usage: moon run cmd/main --target js -- [--info | --trace COUNT | --disassemble ADDRESS COUNT] story.z3|story.z5",
+    )
     return
   }
   try {
     let machine = @zvm.Machine::new(
-      read_story(args[2]),
+      read_story(args[if tracing { 4 } else { 2 }]),
       seed_source=random_seed,
     )
     let mut slices = 0
     while !machine.is_halted() {
-      let status = machine.run() catch {
+      let budget = if trace_left > 0 { 1 } else { 100000 }
+      if trace_left > 0 {
+        write_trace(machine.peek_instruction().format())
+        trace_left -= 1
+        if trace_left == 0 {
+          write_trace("Trace limit reached; continuing without trace.")
+        }
+      }
+      let status = machine.run(budget~) catch {
         @zvm.Invalid(message) => {
           write_output(machine.take_output())
           raise @zvm.Invalid(message)
@@ -121,8 +137,8 @@ fn main {
           }
         }
       } else if status == "budget" {
-        slices += 1
-        if slices > 1000 {
+        slices += budget
+        if slices > 100000000 {
           fail("instruction limit exceeded")
         }
       }
@@ -136,3 +152,7 @@ fn main {
 ///|
 extern "js" fn decimal_arg(value : String) -> Int32 =
   #| value => /^[0-9]+$/.test(value) && Number(value) <= 2147483647 ? Number(value) : -1
+
+///|
+extern "js" fn write_trace(value : String) -> Unit =
+  #| value => process.stderr.write(value + '\n')
