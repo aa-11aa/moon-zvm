@@ -4,49 +4,56 @@ Serial "261031";
 Release 1;
 Array input -> 100;
 Array parse -> 66;
-Global room = 0;
-Global lantern = 0;
-Global turns = 0;
 Object Hall "Quiet Hall";
 Object Tower "Watchtower";
 Object Cellar "Old Cellar";
+! V3 reserves the first three globals for location, score, and moves.
+Global location = Hall;
+Global score = 0;
+Global turns = 0;
+Global room = 0;
+Global lantern = 0;
 
 [ Describe;
+    location = Hall;
+    if (room == 1) location = Tower;
+    if (room == 2) location = Cellar;
     if (room == 0) print "A quiet hall. Stairs lead north to a watchtower. A cellar lies south.^";
     if (room == 1) print "The watchtower overlooks the sea. A brass lantern rests here. Stairs lead south.^";
     if (room == 2) {
+        if (lantern) score = 1;
         if (lantern) print "Your lantern reveals a silver key in the cellar. You have found the lost keeper's key!^";
         else print "The cellar is too dark. You need a light. Stairs lead north.^";
     }
 ];
 
-[ SaveGame result;
-    #IfV3;
+#IfV3;
+[ SaveGame;
     @save ?saved;
     print "Save cancelled.^"; return;
     .saved;
     print "Game saved or restored.^";
-    #Ifnot;
+];
+[ RestoreGame;
+    @restore ?restored;
+    .restored;
+    print "Restore cancelled.^";
+];
+#Ifnot;
+[ SaveGame result;
     @save -> result;
     if (result == 1) print "Game saved.^";
     if (result == 2) print "Game restored.^";
     if (result == 0) print "Save cancelled.^";
-    #Endif;
 ];
-
 [ RestoreGame result;
-    #IfV3;
-    @restore ?restored;
-    .restored;
-    print "Restore cancelled.^";
-    #Ifnot;
     @restore -> result;
     if (result == 0) print "Restore cancelled.^";
-    #Endif;
 ];
+#Endif;
 
 [ Main word;
-    print "The Last Lantern^A tiny original adventure for moon-zvm.^";
+    print (string) Story, "^A tiny original adventure for moon-zvm.^";
     print "Commands: look, north, south, take, inventory, save, restore, quit.^";
     Describe();
     while (true) {
@@ -55,7 +62,7 @@ Object Cellar "Old Cellar";
         parse->0 = 16;
         read input parse;
         if (parse->1 == 0) continue;
-        word = parse-->1;
+        word = 256 * parse->2 + parse->3;
         if (word == 'quit' or 'q//') { print "Goodbye.^"; @quit; }
         if (word == 'look' or 'l//') { Describe(); continue; }
         if (word == 'inventory' or 'i//') {

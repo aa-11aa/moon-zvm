@@ -21,3 +21,5 @@ Praxix is downloaded only when `tools/conformance.py --praxix` is requested. The
 Praxix is interactive; the runner feeds `all` and `quit` and checks its own assertion summary. Its Standard 1.1 visual colour test and Standard 1.2 capability test are skipped because this interpreter intentionally advertises revision 0.0. This is not a claim of complete Z-machine conformance.
 
 The included `examples/lantern.inf` and `.z3` / `.z5` builds are original Apache-2.0 material. They use no Inform library. Zork and other proprietary games are not included.
+
+Optional save-interchange tests were run against **Dumb Frotz 2.44** for Windows, compiled by Hugo Labrande and distributed by IF Archive. Archive: https://ifarchive.org/if-archive/infocom/interpreters/frotz/dfrotz.zip ; SHA-256 `4015db97afe0825c6fd115df1e758884d180f2e000166882ad17b287f21c6f04`. This GPL-2.0 reference interpreter is not distributed with this repository and is not a library dependency. `tools/interop.py` invokes a separately supplied executable and compares observable behavior and standard Quetzal files.

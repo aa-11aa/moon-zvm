@@ -78,7 +78,7 @@ This project does **not** claim full Standard 1.1 conformance. The header delibe
 - The hosts offer plain text. Colour, bold/italic styles, font 3, pictures, mouse, external transcripts, command recording and auxiliary files are not advertised. Font 1 and fixed font 4 are available; unsupported fonts return 0.
 - v3 reports that it cannot display the automatic status line. The upper-window API is for explicit split-window output.
 - Random numbers use a deterministic 16-bit PRNG. This is useful for reproducible execution and is not a source of entropy.
-- Quetzal round trips are tested locally. Interchange with another interpreter has not yet been verified.
+- Quetzal exchange has been tested in both directions with Dumb Frotz 2.44 using the original v3/v5 adventure. This does not establish compatibility with every interpreter or every save file.
 - The core is intended for JS, Wasm GC, Wasm and native. The CLI is Node.js only. Native tests run in Linux CI; Windows needs MSVC Build Tools and the Windows SDK.
 
 ## Verify
@@ -96,6 +96,8 @@ python tools/conformance.py --praxix
 node tools/build-web.mjs
 node tools/verify-wasm.mjs
 node tools/verify-player.mjs
+# Optional independent interpreter, installed separately:
+python tools/interop.py --dfrotz /path/to/dfrotz
 ```
 
 The story runner checks Czech **v3: 349 passed / 0 failed** and **v5: 406 passed / 0 failed**. Each additionally prints 19 visual checks, which are **not** counted as automated passes. The optional Praxix runner downloads a hash-pinned story from its author's repository (with archive mirrors as fallbacks), feeds `all` / `quit`, and checks its automatic summary; Standard 1.1 colour and Standard 1.2 capability groups are skipped. Transcripts are saved under ignored `test-results/`.
@@ -108,4 +110,4 @@ The original adventure is tested in both v3 and v5 with navigation, inventory an
 
 The runtime was implemented from [The Z-Machine Standards Document 1.1](https://inform-fiction.org/zmachine/standards/current/index.html) and [Quetzal 1.4](https://ifarchive.org/if-archive/infocom/interpreters/specification/savefile_14.txt). No Frotz or other interpreter source was used or ported.
 
-Runtime and original examples: **Apache-2.0** (see `LICENSE`). Third-party test stories retain their own license notices; see [`fixtures/SOURCES.md`](fixtures/SOURCES.md). Inform 6 compiles the original demonstration story and the v3 Czech test; Inform is not a runtime dependency. Proprietary game files, including Zork, are not distributed here.
+Runtime and original examples: **Apache-2.0** (see `LICENSE`). Third-party test stories retain their own license notices; see [`fixtures/SOURCES.md`](fixtures/SOURCES.md). Inform 6 compiles the original demonstration story and the v3 Czech test; Inform is not a runtime dependency. [Frotz](https://ifarchive.org/indexes/if-archive/infocom/interpreters/frotz/) (GPL-2.0) is used only as an optional external behavior/save-format reference; neither its executable nor its source is included in the module. Proprietary game files, including Zork, are not distributed here.
