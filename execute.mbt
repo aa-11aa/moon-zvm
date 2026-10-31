@@ -507,10 +507,7 @@ fn Machine::execute(self : Machine, ins : Instruction) -> Unit raise Fault {
         }
         11 => {
           self.require(a, 1)
-          if x >= 0xd800 && x <= 0xdfff {
-            raise Invalid("surrogate Unicode character")
-          }
-          self.display_char(x)
+          self.emit_unicode(x)
         }
         12 => {
           self.require(a, 1)

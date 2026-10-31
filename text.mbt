@@ -1,4 +1,75 @@
 ///|
+let default_extra_characters : String = "äöüÄÖÜß»«ëïÿËÏáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛåÅøØãñõÃÑÕæÆçÇþðÞÐ£œŒ¡¿"
+
+///|
+fn Machine::extra_character_table(self : Machine) -> (Int32, Int32) raise Fault {
+  let extension = if self.version == 5 { self.word(54) } else { 0 }
+  let table = if extension != 0 && self.word(extension) >= 3 {
+    self.word(extension + 6)
+  } else {
+    0
+  }
+  let count = if table == 0 {
+    default_extra_characters.length()
+  } else {
+    self.byte(table)
+  }
+  if count > 97 {
+    raise Invalid("Unicode translation table exceeds 97 characters")
+  }
+  (table, count)
+}
+
+///|
+fn Machine::extra_character(
+  self : Machine,
+  table : Int32,
+  index : Int32,
+) -> Int32 raise Fault {
+  let code = if table == 0 {
+    default_extra_characters[index].to_int()
+  } else {
+    self.word(table + 1 + 2 * index)
+  }
+  if code >= 0xd800 && code <= 0xdfff {
+    raise Invalid("surrogate Unicode character")
+  }
+  code
+}
+
+///|
+fn Machine::unicode_zscii(self : Machine, code : Int32) -> Int32 raise Fault {
+  if code >= 32 && code <= 126 {
+    return code
+  }
+  if code == 10 || code == 13 {
+    return 13
+  }
+  if code == 0 {
+    return 0
+  }
+  let (table, count) = self.extra_character_table()
+  for i in 0..<count {
+    if self.extra_character(table, i) == code {
+      return i + 155
+    }
+  }
+  63
+}
+
+///|
+fn Machine::emit_unicode(self : Machine, code : Int32) -> Unit raise Fault {
+  if code >= 0xd800 && code <= 0xdfff {
+    raise Invalid("surrogate Unicode character")
+  }
+  if !self.streams.is_empty() {
+    self.emit(self.unicode_zscii(code))
+  } else if self.screen {
+    self.display_char(code)
+  }
+}
+
+///|
 fn Machine::emit(self : Machine, code : Int32) -> Unit raise Fault {
   if code == 0 {
     return
@@ -14,26 +85,11 @@ fn Machine::emit(self : Machine, code : Int32) -> Unit raise Fault {
     } else if code >= 32 && code <= 126 {
       self.display_char(code)
     } else if code >= 155 && code <= 251 {
-      let ext = if self.version == 5 { self.word(54) } else { 0 }
-      let unicode = if ext != 0 && self.word(ext) >= 3 {
-        self.word(ext + 6)
-      } else {
-        0
+      let (table, count) = self.extra_character_table()
+      if code - 155 >= count {
+        raise Invalid("undefined ZSCII character")
       }
-      if unicode != 0 && code - 155 < self.byte(unicode) {
-        let c = self.word(unicode + 1 + 2 * (code - 155))
-        if c >= 0xd800 && c <= 0xdfff {
-          raise Invalid("surrogate Unicode character")
-        }
-        self.display_char(c)
-      } else {
-        let standard = "äöüÄÖÜß»«ëïÿËÏáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛåÅøØãñõÃÑÕæÆçÇþðÞÐ£œŒ¡¿"
-        if code - 155 < standard.length() {
-          self.display_char(standard[code - 155].to_int())
-        } else {
-          raise Invalid("undefined ZSCII character")
-        }
-      }
+      self.display_char(self.extra_character(table, code - 155))
     } else {
       raise Invalid("unsupported ZSCII output code \{code}")
     }
