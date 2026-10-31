@@ -82,3 +82,20 @@ test "truncated CMem run rejects atomically" {
   assert_true(rejected)
   assert_eq(m.run(), "restore")
 }
+
+///|
+test "invalid v3 restored branch rejects before changing the machine" {
+  let m = @zvm.Machine::new(fixture(3, [182, 194, 186, 0xa0, 0, 186]))
+  assert_eq(m.run(), "restore")
+  let at = m.position()
+  // IFhd resumes at byte 771, whose signed branch points before the story.
+  let rejected = try {
+    m.restore_data(compressed_save([]))
+    false
+  } catch {
+    @zvm.Invalid(_) => true
+  }
+  assert_true(rejected)
+  assert_eq(m.position(), at)
+  assert_eq(m.run(), "restore")
+}

@@ -537,13 +537,7 @@ fn Machine::require(
 ///|
 fn Machine::restart(self : Machine) -> Unit raise Fault {
   let fresh = Machine::new(self.original)
-  for i in 0..<self.static_base {
-    self.mem[i] = fresh.mem[i]
-  }
-  self.frames.clear()
-  self.frames.push(fresh.frames[0])
-  self.pc = fresh.pc
-  self.waiting = 0
+  self.apply_saved(fresh.capture())
   self.streams.clear()
   self.undo.clear()
   self.screen = true
@@ -552,4 +546,5 @@ fn Machine::restart(self : Machine) -> Unit raise Fault {
   self.columns.fill(1)
   self.window = 0
   self.split = 0
+  self.font = fresh.font
 }

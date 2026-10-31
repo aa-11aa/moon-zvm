@@ -337,6 +337,7 @@ pub fn Machine::restore_data(self : Machine, data : Bytes) -> Unit raise Fault {
       } else {
         preview.store(2)
       }
+      let _ = preview.byte(preview.pc)
       self.apply_saved(preview.capture())
       self.undo.clear()
     }

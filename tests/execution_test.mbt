@@ -306,3 +306,15 @@ test "mutated bytecode is bounded or returns Fault" {
     }
   }
 }
+
+///|
+test "restart preserves transcript and fixed-pitch header requests" {
+  // Read Flags 2, set its persistent bits on the first pass, then restart.
+  // The second pass must print 3 and halt instead of restarting forever.
+  let code = [
+    0x10, 0, 17, 16, 0xa0, 16, 0xc6, 0xe6, 0xbf, 16, 186, 0xe2, 0x57, 0, 17, 3, 183,
+  ]
+  for version in [3, 5] {
+    assert_eq(output(version, code), "3")
+  }
+}
