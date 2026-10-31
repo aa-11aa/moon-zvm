@@ -31,6 +31,26 @@ extern "js" fn random_seed() -> Int32 =
 ///|
 fn main {
   let args = @env.args()
+  if args.length() == 6 && args[2] == "--disassemble" {
+    try {
+      let story = read_story(args[5])
+      let mut address = decimal_arg(args[3])
+      let count = decimal_arg(args[4])
+      if address < 64 || count < 1 || count > 10000 {
+        raise @zvm.Invalid(
+          "Expected decimal address >=64 and instruction count 1..10000",
+        )
+      }
+      for _ in 0..<count {
+        let instruction = @zvm.inspect_instruction(story, address)
+        println(instruction.format())
+        address = instruction.next_address
+      }
+    } catch {
+      @zvm.Invalid(message) => exit_error(message)
+    }
+    return
+  }
   if args.length() == 4 && args[2] == "--info" {
     try {
       let info = @zvm.inspect_story(read_story(args[3]))
@@ -112,3 +132,7 @@ fn main {
     error => exit_error("Interpreter error: \{error}")
   }
 }
+
+///|
+extern "js" fn decimal_arg(value : String) -> Int32 =
+  #| value => /^[0-9]+$/.test(value) && Number(value) <= 2147483647 ? Number(value) : -1

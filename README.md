@@ -62,6 +62,8 @@ Invalid stories, unsupported instructions and execution faults raise `Invalid(St
 
 Inspect a story without executing it with `moon run cmd/main --target js -- --info examples/lantern.z5`. The `inspect_story(bytes)` API reports original header fields, printable serial metadata, memory boundaries and checksum status, and rejects truncated or invalid memory maps before allocating a machine.
 
+Decode a bounded sequential listing with `moon run cmd/main --target js -- --disassemble 1621 2 examples/lantern.z5` (decimal address and count). `inspect_instruction(bytes, address)` reports raw operands, store variables, branch destinations and inline text boundaries. `Machine::peek_instruction()` inspects the current live instruction without evaluating variables or changing stacks; it rejects halted or suspended machines. Listings do not follow calls or branches and do not decode text as instructions automatically.
+
 - Raw v3/v5 headers, big-endian dynamic/static memory, 16-bit arithmetic.
 - Long, short, variable and extended instruction encodings; routine calls, arguments, locals, globals and evaluation stacks.
 - Comparisons, branches, signed arithmetic, indirect variables, object trees, attributes and variable-size properties.

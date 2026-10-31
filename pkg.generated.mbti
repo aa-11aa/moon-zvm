@@ -2,6 +2,8 @@
 package "aa-11aa/moon-zvm"
 
 // Values
+pub fn inspect_instruction(Bytes, Int32) -> InstructionInfo raise Fault
+
 pub fn inspect_story(Bytes) -> StoryInfo raise Fault
 
 // Errors
@@ -10,11 +12,32 @@ pub(all) suberror Fault {
 }
 
 // Types and methods
+pub struct BranchInfo {
+  on_true : Bool
+  offset : Int32
+  target : Int32?
+  return_value : Int32?
+}
+
+pub struct InstructionInfo {
+  address : Int32
+  next_address : Int32
+  form : String
+  opcode : Int32
+  mnemonic : String
+  operands : Array[OperandInfo]
+  store : Int32?
+  branch : BranchInfo?
+  inline_text : Int32?
+}
+pub fn InstructionInfo::format(Self) -> String
+
 type Machine
 pub fn Machine::cancel_restore(Self) -> Unit raise Fault
 pub fn Machine::finish_save(Self, Bool) -> Unit raise Fault
 pub fn Machine::is_halted(Self) -> Bool
 pub fn Machine::new(Bytes, seed_source? : () -> Int32) -> Self raise Fault
+pub fn Machine::peek_instruction(Self) -> InstructionInfo raise Fault
 pub fn Machine::position(Self) -> Int32
 pub fn Machine::restore_data(Self, Bytes) -> Unit raise Fault
 pub fn Machine::run(Self, budget? : Int32) -> String raise Fault
@@ -23,6 +46,11 @@ pub fn Machine::send_char(Self, Int32) -> Unit raise Fault
 pub fn Machine::send_line(Self, String) -> Unit raise Fault
 pub fn Machine::take_output(Self) -> String
 pub fn Machine::upper_window(Self) -> String
+
+pub struct OperandInfo {
+  kind : String
+  value : Int32
+}
 
 pub struct StoryInfo {
   version : Int32
